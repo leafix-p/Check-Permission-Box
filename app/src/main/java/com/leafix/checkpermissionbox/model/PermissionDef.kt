@@ -193,32 +193,37 @@ data class PermissionDef(
         /**
          * POST_NOTIFICATIONS
          *
-         * 通知权限。
-         * - Android 13+：通过 RuntimePermission 系统对话框申请
-         * - Android 12 以下：通知默认开启，通过 Settings.ACTION_APP_NOTIFICATION_SETTINGS 跳转管理
+         * 通知权限 - Android 13+ 运行时权限方式。
+         * 通过系统对话框申请 POST_NOTIFICATIONS 运行时权限。
          */
         val POST_NOTIFICATIONS = PermissionDef(
             nameResId = R.string.permission_notification,
             descriptionResId = R.string.permission_notification_desc,
             requiredApiTextResId = R.string.permission_required_api_33,
-            // 所有版本可用（低版本通过 NotificationManagerCompat 检查）
+            minSdk = Build.VERSION_CODES.TIRAMISU,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.POST_NOTIFICATIONS)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.POST_NOTIFICATIONS)
+        )
+
+        /**
+         * NOTIFICATION_SETTINGS
+         *
+         * 通知设置 - 所有版本通用方式。
+         * 通过 Settings.ACTION_APP_NOTIFICATION_SETTINGS 跳转系统通知设置页面管理。
+         */
+        val NOTIFICATION_SETTINGS = PermissionDef(
+            nameResId = R.string.permission_notification,
+            descriptionResId = R.string.permission_notification_desc,
+            requiredApiTextResId = R.string.permission_all_api,
             minSdk = 1,
             checkPermission = { ctx ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    checkRuntimePermission(ctx, Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    // 低版本使用 NotificationManagerCompat 检查通知是否被关闭
-                    NotificationManagerCompat.from(ctx).areNotificationsEnabled()
-                }
+                NotificationManagerCompat.from(ctx).areNotificationsEnabled()
             },
-            requestMethod = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                RequestMethod.RuntimePermission(Manifest.permission.POST_NOTIFICATIONS)
-            } else {
-                // API 32 及以下跳转应用通知设置页面
-                RequestMethod.SettingsIntent { context ->
-                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                    }
+            requestMethod = RequestMethod.SettingsIntent { context ->
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                 }
             }
         )
@@ -276,6 +281,7 @@ data class PermissionDef(
             ACCESS_FINE_LOCATION,
             RECORD_AUDIO,
             POST_NOTIFICATIONS,
+            NOTIFICATION_SETTINGS,
             READ_MEDIA_IMAGES,
             BLUETOOTH_CONNECT
         )
