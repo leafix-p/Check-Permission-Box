@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">CheckPermissionBox</string>
+
+    <!-- 权限相关字符串 -->
+    <string name="manage_storage_permission">管理所有文件</string>
+    <string name="manage_storage_permission_desc">允许应用访问设备上的所有文件</string>
+    <string name="manage_storage_permission_not_supported">当前系统版本不支持此权限</string>
+    <string name="manage_storage_required_api">需要 Android 11 (API 30) 及以上</string>
+    <string name="permission_granted">已授权</string>
+    <string name="permission_denied">未授权</string>
+
+    <!-- 设备信息字符串 -->
+    <string name="device_info_section">设备信息</string>
+    <string name="device_model_label">设备型号</string>
+    <string name="android_version_label">Android 版本</string>
+    <string name="build_version_label">系统版本</string>
+</resources>
