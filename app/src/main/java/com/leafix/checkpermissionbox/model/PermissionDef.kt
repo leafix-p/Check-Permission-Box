@@ -8,6 +8,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.core.content.ContextCompat
 import com.leafix.checkpermissionbox.R
 
@@ -31,6 +35,54 @@ sealed class RequestMethod {
      * @param permissionName Manifest.permission 常量名
      */
     data class RuntimePermission(val permissionName: String) : RequestMethod()
+}
+
+/**
+ * 权限请求执行器
+ *
+ * 封装了 ActivityResultLauncher 的创建和请求逻辑，
+ * 对外提供统一的 [launch] 方法。
+ * UI 组件无需关心底层使用的是 [SettingsIntent] 还是 [RuntimePermission]。
+ *
+ * @param launch 执行权限请求的回调，接收 Context 参数
+ */
+class PermissionLauncher(
+    val launch: (Context) -> Unit
+)
+
+/**
+ * [RequestMethod] 的 Compose 扩展函数
+ *
+ * 根据请求方式创建并记住对应的 ActivityResultLauncher，
+ * 返回统一的 [PermissionLauncher] 供调用方使用。
+ *
+ * @param onResult 用户响应权限请求后的回调（用于重新检查权限状态）
+ * @return [PermissionLauncher] 封装后的请求执行器
+ */
+@Composable
+fun RequestMethod.rememberLauncher(
+    onResult: () -> Unit
+): PermissionLauncher {
+    return when (this) {
+        is RequestMethod.SettingsIntent -> {
+            // 创建跳转系统设置页面的 Launcher
+            val launcher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult()
+            ) { onResult() }
+            PermissionLauncher { context ->
+                launcher.launch(createIntent(context))
+            }
+        }
+        is RequestMethod.RuntimePermission -> {
+            // 创建系统运行时权限对话框的 Launcher
+            val launcher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { onResult() }
+            PermissionLauncher { context ->
+                launcher.launch(permissionName)
+            }
+        }
+    }
 }
 
 /**

@@ -1,9 +1,6 @@
 package com.leafix.checkpermissionbox.ui.permission
 
-import android.content.Intent
 import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,16 +26,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.leafix.checkpermissionbox.model.PermissionDef
-import com.leafix.checkpermissionbox.model.RequestMethod
+import com.leafix.checkpermissionbox.model.rememberLauncher
 
 /**
  * 通用权限条目组件
  *
- * 根据 [PermissionDef] 数据渲染一个权限管理条目,支持两类权限请求方式:
- * - [RequestMethod.SettingsIntent]: 跳转系统设置页面引导授权
- * - [RequestMethod.RuntimePermission]: 弹出系统对话框申请运行时权限
+ * 根据 [PermissionDef] 数据渲染一个权限管理条目。
+ * 权限请求方式已通过 [PermissionDef.requestMethod] 解耦，
+ * 由 [rememberLauncher] 统一处理 [SettingsIntent] 和 [RuntimePermission] 的差异。
  *
- * 当设备系统版本不满足最低要求时,整行半透明禁用。
+ * 当设备系统版本不满足最低要求时，整行半透明禁用。
  * 权限状态通过 ActivityResultLauncher 和 onResume 生命周期实时刷新。
  *
  * @param permission 权限定义数据
@@ -52,30 +49,22 @@ fun PermissionItem(
     // 判断当前设备是否满足最低 API 要求
     val isSupported = Build.VERSION.SDK_INT >= permission.minSdk
 
-    // 获取当前 context,用于检查权限和启动 Intent
+    // 获取当前 context,用于检查权限状态
     val context = LocalContext.current
 
     // 权限授权状态:true=已授权,false=未授权
-    // checkPermission 需要 Context 参数
     var isGranted by remember {
         mutableStateOf(permission.checkPermission(context))
     }
 
-    // 注册 ActivityResultLauncher: 跳转系统设置页面
-    val settingsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { _ ->
-        // 用户从系统设置页面返回后,重新检查权限状态
-        isGranted = permission.checkPermission(context)
-    }
-
-    // 注册 ActivityResultLauncher: 系统运行时权限对话框
-    val runtimeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { _ ->
-        // 用户响应权限对话框后,重新检查权限状态
-        isGranted = permission.checkPermission(context)
-    }
+    // 通过 RequestMethod 的扩展函数创建统一的权限请求执行器
+    // 内部根据 SettingsIntent / RuntimePermission 自动选择对应的 ActivityResultLauncher
+    val permissionLauncher = permission.requestMethod.rememberLauncher(
+        onResult = {
+            // 用户响应权限请求后重新检查权限状态
+            isGranted = permission.checkPermission(context)
+        }
+    )
 
     // 监听生命周期事件,在 onResume 时重新检查权限状态
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -113,18 +102,8 @@ fun PermissionItem(
             checked = if (isSupported) isGranted else false,
             onCheckedChange = if (isSupported) { targetChecked ->
                 if (targetChecked && !isGranted) {
-                    // 关闭 -> 打开: 按权限请求方式启动授权
-                    when (val method = permission.requestMethod) {
-                        is RequestMethod.SettingsIntent -> {
-                            // 跳转系统设置页面引导授权
-                            val intent: Intent = method.createIntent(context)
-                            settingsLauncher.launch(intent)
-                        }
-                        is RequestMethod.RuntimePermission -> {
-                            // 弹出系统运行时权限对话框
-                            runtimeLauncher.launch(method.permissionName)
-                        }
-                    }
+                    // 关闭 -> 打开: 通过统一的 PermissionLauncher 发起请求
+                    permissionLauncher.launch(context)
                 }
             } else null
         )
