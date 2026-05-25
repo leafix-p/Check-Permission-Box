@@ -26,6 +26,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
+    <!-- USB 主机模式（用于 USB 设备访问） -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -47,5 +50,7 @@
             </intent-filter>
         </activity>
     </application>
+
+</manifest>    </application>
 
 </manifest>

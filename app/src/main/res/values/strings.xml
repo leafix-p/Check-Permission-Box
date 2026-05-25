@@ -58,7 +58,12 @@
     <string name="permission_bluetooth_connect_desc">允许应用连接和控制蓝牙设备</string>
     <string name="permission_bluetooth_scan">蓝牙扫描</string>
     <string name="permission_bluetooth_scan_desc">允许应用扫描附近的蓝牙设备</string>
+    <string name="permission_screen_record">屏幕录制</string>
+    <string name="permission_screen_record_desc">允许应用录制设备屏幕内容</string>
+    <string name="permission_usb_device">USB 设备</string>
+    <string name="permission_usb_device_desc">允许应用连接和访问 USB 设备</string>
     <string name="permission_all_api">支持所有系统版本</string>
+    <string name="permission_required_api_21">需要 Android 5 (API 21) 及以上</string>
     <string name="permission_required_api_29">需要 Android 10 (API 29) 及以上</string>
     <string name="permission_required_api_31">需要 Android 12 (API 31) 及以上</string>
     <string name="permission_required_api_33">需要 Android 13 (API 33) 及以上</string>

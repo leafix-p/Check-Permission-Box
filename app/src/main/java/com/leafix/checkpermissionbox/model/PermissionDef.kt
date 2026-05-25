@@ -1,9 +1,12 @@
 package com.leafix.checkpermissionbox.model
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.usb.UsbManager
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -445,6 +448,43 @@ data class PermissionDef(
         )
 
         /**
+         * RECORD_SCREEN
+         *
+         * 屏幕录制权限（MediaProjection API）。
+         * 通过 MediaProjectionManager.createScreenCaptureIntent() 弹出系统授权对话框。
+         * 每次录制前须重新授权，非持久化权限。
+         */
+        val RECORD_SCREEN = PermissionDef(
+            nameResId = R.string.permission_screen_record,
+            descriptionResId = R.string.permission_screen_record_desc,
+            requiredApiTextResId = R.string.permission_required_api_21,
+            minSdk = Build.VERSION_CODES.LOLLIPOP,
+            checkPermission = { _ -> false },  // MediaProjection 为一次性授权，无法持久检查
+            requestMethod = RequestMethod.SettingsIntent { context ->
+                val mpm = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE)
+                        as MediaProjectionManager
+                mpm.createScreenCaptureIntent()
+            }
+        )
+
+        /**
+         * USB_DEVICE
+         *
+         * USB 设备访问权限。
+         * 通过 UsbManager.ACTION_USB_PERMISSION 广播机制请求设备授权。
+         */
+        val USB_DEVICE = PermissionDef(
+            nameResId = R.string.permission_usb_device,
+            descriptionResId = R.string.permission_usb_device_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { _ -> false },  // 需要指定具体 USB 设备，此处简化
+            requestMethod = RequestMethod.SettingsIntent { context ->
+                Intent(UsbManager.ACTION_USB_DEVICE_ATTACHED)
+            }
+        )
+
+        /**
          * 所有已定义的权限列表（平铺）
          */
         val ALL_PERMISSIONS: List<PermissionDef> = listOf(
@@ -454,7 +494,8 @@ data class PermissionDef(
             ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION,
             READ_CONTACTS, READ_CALENDAR, READ_SMS, READ_PHONE_STATE, BODY_SENSORS,
             POST_NOTIFICATIONS, NOTIFICATION_SETTINGS,
-            BLUETOOTH_CONNECT, BLUETOOTH_SCAN
+            BLUETOOTH_CONNECT, BLUETOOTH_SCAN,
+            RECORD_SCREEN, USB_DEVICE
         )
 
         /**
@@ -463,7 +504,9 @@ data class PermissionDef(
          * UI 层使用此列表渲染分类标题和条目。
          */
         val GROUPED_PERMISSIONS: List<PermissionGroup> = listOf(
-            PermissionGroup(R.string.category_special, listOf(MANAGE_EXTERNAL_STORAGE)),
+            PermissionGroup(R.string.category_special, listOf(
+                MANAGE_EXTERNAL_STORAGE, RECORD_SCREEN, USB_DEVICE
+            )),
             PermissionGroup(R.string.category_media_sensor, listOf(
                 CAMERA, RECORD_AUDIO,
                 READ_MEDIA_IMAGES, READ_MEDIA_VIDEO, READ_MEDIA_AUDIO
