@@ -164,14 +164,46 @@ data class PermissionDef(
          * 精确定位权限，始终可用的运行时权限。
          */
         val ACCESS_FINE_LOCATION = PermissionDef(
-            nameResId = R.string.permission_location,
-            descriptionResId = R.string.permission_location_desc,
+            nameResId = R.string.permission_fine_location,
+            descriptionResId = R.string.permission_fine_location_desc,
             requiredApiTextResId = R.string.permission_all_api,
             minSdk = 1,
             checkPermission = { ctx ->
                 checkRuntimePermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION)
             },
             requestMethod = RequestMethod.RuntimePermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        )
+
+        /**
+         * ACCESS_COARSE_LOCATION
+         *
+         * 粗略位置权限，始终可用的运行时权限。
+         */
+        val ACCESS_COARSE_LOCATION = PermissionDef(
+            nameResId = R.string.permission_coarse_location,
+            descriptionResId = R.string.permission_coarse_location_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+        )
+
+        /**
+         * ACCESS_BACKGROUND_LOCATION
+         *
+         * 后台位置权限，Android 10 (API 29) 引入。
+         */
+        val ACCESS_BACKGROUND_LOCATION = PermissionDef(
+            nameResId = R.string.permission_background_location,
+            descriptionResId = R.string.permission_background_location_desc,
+            requiredApiTextResId = R.string.permission_required_api_29,
+            minSdk = Build.VERSION_CODES.Q,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         )
 
         /**
@@ -214,8 +246,8 @@ data class PermissionDef(
          * 通过 Settings.ACTION_APP_NOTIFICATION_SETTINGS 跳转系统通知设置页面管理。
          */
         val NOTIFICATION_SETTINGS = PermissionDef(
-            nameResId = R.string.permission_notification,
-            descriptionResId = R.string.permission_notification_desc,
+            nameResId = R.string.permission_notification_settings,
+            descriptionResId = R.string.permission_notification_settings_desc,
             requiredApiTextResId = R.string.permission_all_api,
             minSdk = 1,
             checkPermission = { ctx ->
@@ -255,19 +287,150 @@ data class PermissionDef(
          * 蓝牙连接权限，Android 12 (API 31) 引入的运行时权限。
          */
         val BLUETOOTH_CONNECT = PermissionDef(
-            nameResId = R.string.permission_bluetooth,
-            descriptionResId = R.string.permission_bluetooth_desc,
+            nameResId = R.string.permission_bluetooth_connect,
+            descriptionResId = R.string.permission_bluetooth_connect_desc,
             requiredApiTextResId = R.string.permission_required_api_31,
             minSdk = Build.VERSION_CODES.S,
             checkPermission = { ctx ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     checkRuntimePermission(ctx, Manifest.permission.BLUETOOTH_CONNECT)
                 } else {
-                    // API 31 以下无需此运行时权限
                     true
                 }
             },
             requestMethod = RequestMethod.RuntimePermission(Manifest.permission.BLUETOOTH_CONNECT)
+        )
+
+        /**
+         * BLUETOOTH_SCAN
+         *
+         * 蓝牙扫描权限，Android 12 (API 31) 引入的运行时权限。
+         */
+        val BLUETOOTH_SCAN = PermissionDef(
+            nameResId = R.string.permission_bluetooth_scan,
+            descriptionResId = R.string.permission_bluetooth_scan_desc,
+            requiredApiTextResId = R.string.permission_required_api_31,
+            minSdk = Build.VERSION_CODES.S,
+            checkPermission = { ctx ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    checkRuntimePermission(ctx, Manifest.permission.BLUETOOTH_SCAN)
+                } else {
+                    true
+                }
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.BLUETOOTH_SCAN)
+        )
+
+        /**
+         * READ_CONTACTS
+         *
+         * 读取通讯录权限，始终可用的运行时权限。
+         */
+        val READ_CONTACTS = PermissionDef(
+            nameResId = R.string.permission_contacts,
+            descriptionResId = R.string.permission_contacts_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.READ_CONTACTS)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.READ_CONTACTS)
+        )
+
+        /**
+         * READ_CALENDAR
+         *
+         * 读取日历权限，始终可用的运行时权限。
+         */
+        val READ_CALENDAR = PermissionDef(
+            nameResId = R.string.permission_calendar,
+            descriptionResId = R.string.permission_calendar_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.READ_CALENDAR)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.READ_CALENDAR)
+        )
+
+        /**
+         * READ_SMS
+         *
+         * 读取短信权限，始终可用的运行时权限。
+         */
+        val READ_SMS = PermissionDef(
+            nameResId = R.string.permission_sms,
+            descriptionResId = R.string.permission_sms_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.READ_SMS)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.READ_SMS)
+        )
+
+        /**
+         * READ_PHONE_STATE
+         *
+         * 读取设备状态权限，始终可用的运行时权限。
+         */
+        val READ_PHONE_STATE = PermissionDef(
+            nameResId = R.string.permission_phone_state,
+            descriptionResId = R.string.permission_phone_state_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.READ_PHONE_STATE)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.READ_PHONE_STATE)
+        )
+
+        /**
+         * BODY_SENSORS
+         *
+         * 身体传感器权限，始终可用的运行时权限。
+         */
+        val BODY_SENSORS = PermissionDef(
+            nameResId = R.string.permission_body_sensors,
+            descriptionResId = R.string.permission_body_sensors_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.BODY_SENSORS)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.BODY_SENSORS)
+        )
+
+        /**
+         * READ_MEDIA_VIDEO
+         *
+         * 读取媒体视频权限，Android 13 (API 33) 引入。
+         */
+        val READ_MEDIA_VIDEO = PermissionDef(
+            nameResId = R.string.permission_read_media_video,
+            descriptionResId = R.string.permission_read_media_video_desc,
+            requiredApiTextResId = R.string.permission_required_api_33,
+            minSdk = Build.VERSION_CODES.TIRAMISU,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.READ_MEDIA_VIDEO)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.READ_MEDIA_VIDEO)
+        )
+
+        /**
+         * READ_MEDIA_AUDIO
+         *
+         * 读取媒体音频权限，Android 13 (API 33) 引入。
+         */
+        val READ_MEDIA_AUDIO = PermissionDef(
+            nameResId = R.string.permission_read_media_audio,
+            descriptionResId = R.string.permission_read_media_audio_desc,
+            requiredApiTextResId = R.string.permission_required_api_33,
+            minSdk = Build.VERSION_CODES.TIRAMISU,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.READ_MEDIA_AUDIO)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.READ_MEDIA_AUDIO)
         )
 
         /**
@@ -276,14 +439,30 @@ data class PermissionDef(
          * 按预期显示顺序排列。新增权限时只需在此列表中添加定义即可。
          */
         val ALL_PERMISSIONS: List<PermissionDef> = listOf(
+            // 特殊权限
             MANAGE_EXTERNAL_STORAGE,
+            // 媒体与传感器
             CAMERA,
-            ACCESS_FINE_LOCATION,
             RECORD_AUDIO,
+            READ_MEDIA_IMAGES,
+            READ_MEDIA_VIDEO,
+            READ_MEDIA_AUDIO,
+            // 位置
+            ACCESS_FINE_LOCATION,
+            ACCESS_COARSE_LOCATION,
+            ACCESS_BACKGROUND_LOCATION,
+            // 通讯与数据
+            READ_CONTACTS,
+            READ_CALENDAR,
+            READ_SMS,
+            READ_PHONE_STATE,
+            BODY_SENSORS,
+            // 通知
             POST_NOTIFICATIONS,
             NOTIFICATION_SETTINGS,
-            READ_MEDIA_IMAGES,
-            BLUETOOTH_CONNECT
+            // 蓝牙
+            BLUETOOTH_CONNECT,
+            BLUETOOTH_SCAN
         )
 
         /**
