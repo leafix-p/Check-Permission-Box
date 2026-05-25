@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.leafix.checkpermissionbox.model.PermissionDef
+import com.leafix.checkpermissionbox.model.PermissionGroup
 import com.leafix.checkpermissionbox.ui.permission.PermissionItem
 import com.leafix.checkpermissionbox.ui.theme.CheckPermissionBoxTheme
 
@@ -46,13 +47,13 @@ class MainActivity : ComponentActivity() {
 /**
  * 权限列表主界面
  *
- * 顶部显示设备基础信息,下方列出 [PermissionDef.ALL_PERMISSIONS] 中的所有权限条目,
- * 每个条目由通用组件 [PermissionItem] 渲染。
+ * 顶部显示设备基础信息，下方按分类分组显示权限条目，
+ * 每组包含一个分类标题和对应的权限开关列表。
  */
 @Composable
 fun PermissionList(modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
-        // 顶部:设备基础信息区域
+        // 顶部：设备基础信息区域
         item {
             DeviceInfoSection()
         }
@@ -64,18 +65,42 @@ fun PermissionList(modifier: Modifier = Modifier) {
             )
         }
 
-        // 遍历所有已定义的权限,自动生成权限条目
-        items(PermissionDef.ALL_PERMISSIONS.size) { index ->
-            val permission = PermissionDef.ALL_PERMISSIONS[index]
-            PermissionItem(permission = permission)
+        // 按分类遍历权限分组
+        PermissionDef.GROUPED_PERMISSIONS.forEach { group ->
+            // 分类标题
+            item {
+                CategoryHeader(titleResId = group.titleResId)
+            }
+
+            // 该分类下的权限条目
+            items(group.permissions.size) { index ->
+                PermissionItem(permission = group.permissions[index])
+            }
         }
     }
 }
 
 /**
+ * 分类标题组件
+ *
+ * @param titleResId 分类名称字符串资源 ID
+ */
+@Composable
+fun CategoryHeader(titleResId: Int) {
+    Text(
+        text = stringResource(titleResId),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+    )
+}
+
+/**
  * 设备基础信息展示组件
  *
- * 显示当前设备的基本信息,包括:
+ * 显示当前设备的基本信息，包括：
  * - 设备型号 (Build.MODEL)
  * - Android 版本 (Build.VERSION.RELEASE)
  * - 系统镜像版本 (Build.DISPLAY)

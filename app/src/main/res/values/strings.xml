@@ -9,6 +9,14 @@
     <string name="permission_granted">已授权</string>
     <string name="permission_denied">未授权</string>
 
+    <!-- 分类标题字符串 -->
+    <string name="category_special">特殊权限</string>
+    <string name="category_media_sensor">媒体与传感器</string>
+    <string name="category_location">位置</string>
+    <string name="category_communication">通讯与数据</string>
+    <string name="category_notification">通知</string>
+    <string name="category_bluetooth">蓝牙</string>
+
     <!-- 设备信息字符串 -->
     <string name="device_info_section">设备信息</string>
     <string name="device_model_label">设备型号</string>

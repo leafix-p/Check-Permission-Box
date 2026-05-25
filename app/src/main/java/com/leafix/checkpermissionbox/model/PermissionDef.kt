@@ -17,6 +17,17 @@ import androidx.core.content.ContextCompat
 import com.leafix.checkpermissionbox.R
 
 /**
+ * 权限分组
+ *
+ * @param titleResId 分类标题字符串资源 ID
+ * @param permissions 该分类下的权限定义列表
+ */
+data class PermissionGroup(
+    val titleResId: Int,
+    val permissions: List<PermissionDef>
+)
+
+/**
  * 权限请求方式
  *
  * - [SettingsIntent]: 跳转系统设置页面引导授权（如 MANAGE_EXTERNAL_STORAGE）
@@ -434,35 +445,41 @@ data class PermissionDef(
         )
 
         /**
-         * 所有已定义的权限列表
-         *
-         * 按预期显示顺序排列。新增权限时只需在此列表中添加定义即可。
+         * 所有已定义的权限列表（平铺）
          */
         val ALL_PERMISSIONS: List<PermissionDef> = listOf(
-            // 特殊权限
             MANAGE_EXTERNAL_STORAGE,
-            // 媒体与传感器
-            CAMERA,
-            RECORD_AUDIO,
-            READ_MEDIA_IMAGES,
-            READ_MEDIA_VIDEO,
-            READ_MEDIA_AUDIO,
-            // 位置
-            ACCESS_FINE_LOCATION,
-            ACCESS_COARSE_LOCATION,
-            ACCESS_BACKGROUND_LOCATION,
-            // 通讯与数据
-            READ_CONTACTS,
-            READ_CALENDAR,
-            READ_SMS,
-            READ_PHONE_STATE,
-            BODY_SENSORS,
-            // 通知
-            POST_NOTIFICATIONS,
-            NOTIFICATION_SETTINGS,
-            // 蓝牙
-            BLUETOOTH_CONNECT,
-            BLUETOOTH_SCAN
+            CAMERA, RECORD_AUDIO,
+            READ_MEDIA_IMAGES, READ_MEDIA_VIDEO, READ_MEDIA_AUDIO,
+            ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION,
+            READ_CONTACTS, READ_CALENDAR, READ_SMS, READ_PHONE_STATE, BODY_SENSORS,
+            POST_NOTIFICATIONS, NOTIFICATION_SETTINGS,
+            BLUETOOTH_CONNECT, BLUETOOTH_SCAN
+        )
+
+        /**
+         * 按分类分组的权限列表
+         *
+         * UI 层使用此列表渲染分类标题和条目。
+         */
+        val GROUPED_PERMISSIONS: List<PermissionGroup> = listOf(
+            PermissionGroup(R.string.category_special, listOf(MANAGE_EXTERNAL_STORAGE)),
+            PermissionGroup(R.string.category_media_sensor, listOf(
+                CAMERA, RECORD_AUDIO,
+                READ_MEDIA_IMAGES, READ_MEDIA_VIDEO, READ_MEDIA_AUDIO
+            )),
+            PermissionGroup(R.string.category_location, listOf(
+                ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION
+            )),
+            PermissionGroup(R.string.category_communication, listOf(
+                READ_CONTACTS, READ_CALENDAR, READ_SMS, READ_PHONE_STATE, BODY_SENSORS
+            )),
+            PermissionGroup(R.string.category_notification, listOf(
+                POST_NOTIFICATIONS, NOTIFICATION_SETTINGS
+            )),
+            PermissionGroup(R.string.category_bluetooth, listOf(
+                BLUETOOTH_CONNECT, BLUETOOTH_SCAN
+            ))
         )
 
         /**
