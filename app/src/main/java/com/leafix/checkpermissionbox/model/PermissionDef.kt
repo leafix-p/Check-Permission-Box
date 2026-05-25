@@ -200,11 +200,7 @@ data class PermissionDef(
         val POST_NOTIFICATIONS = PermissionDef(
             nameResId = R.string.permission_notification,
             descriptionResId = R.string.permission_notification_desc,
-            requiredApiTextResId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                R.string.permission_required_api_33
-            } else {
-                R.string.permission_all_api
-            },
+            requiredApiTextResId = R.string.permission_all_api,
             // 所有版本可用（低版本通过 NotificationManagerCompat 检查）
             minSdk = 1,
             checkPermission = { ctx ->
