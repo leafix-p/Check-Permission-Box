@@ -14,4 +14,21 @@
     <string name="device_model_label">设备型号</string>
     <string name="android_version_label">Android 版本</string>
     <string name="build_version_label">系统版本</string>
+
+    <!-- 运行时权限字符串 -->
+    <string name="permission_camera">相机</string>
+    <string name="permission_camera_desc">允许应用拍摄照片和视频</string>
+    <string name="permission_location">位置信息</string>
+    <string name="permission_location_desc">允许应用获取设备的精确定位</string>
+    <string name="permission_microphone">麦克风</string>
+    <string name="permission_microphone_desc">允许应用录制音频</string>
+    <string name="permission_notification">通知</string>
+    <string name="permission_notification_desc">允许应用发送通知</string>
+    <string name="permission_read_media_images">媒体图片</string>
+    <string name="permission_read_media_images_desc">允许应用读取设备中的图片文件</string>
+    <string name="permission_bluetooth">蓝牙</string>
+    <string name="permission_bluetooth_desc">允许应用连接和控制蓝牙设备</string>
+    <string name="permission_all_api">支持所有系统版本</string>
+    <string name="permission_required_api_31">需要 Android 12 (API 31) 及以上</string>
+    <string name="permission_required_api_33">需要 Android 13 (API 33) 及以上</string>
 </resources>

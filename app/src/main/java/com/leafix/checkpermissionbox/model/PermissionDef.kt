@@ -1,12 +1,37 @@
 package com.leafix.checkpermissionbox.model
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import androidx.core.content.ContextCompat
 import com.leafix.checkpermissionbox.R
+
+/**
+ * 权限请求方式
+ *
+ * - [SettingsIntent]: 跳转系统设置页面引导授权（如 MANAGE_EXTERNAL_STORAGE）
+ * - [RuntimePermission]: 通过系统对话框申请运行时权限（如 CAMERA、LOCATION）
+ */
+sealed class RequestMethod {
+    /**
+     * 跳转系统设置页面
+     *
+     * @param createIntent 创建跳转 Intent 的 lambda
+     */
+    data class SettingsIntent(val createIntent: (context: Context) -> Intent) : RequestMethod()
+
+    /**
+     * 系统对话框运行时权限
+     *
+     * @param permissionName Manifest.permission 常量名
+     */
+    data class RuntimePermission(val permissionName: String) : RequestMethod()
+}
 
 /**
  * 权限定义数据类
@@ -19,21 +44,24 @@ import com.leafix.checkpermissionbox.R
  * @param descriptionResId 权限用途描述字符串资源 ID
  * @param requiredApiTextResId 适用的最低系统版本提示字符串资源 ID
  * @param minSdk 该权限的最低 API 级别
- * @param checkPermission 检查权限是否已授予的 lambda,返回 true=已授权
- * @param createRequestIntent 创建跳转系统设置引导授权 Intent 的 lambda,
- *                            若返回 null 则表示无需跳转
+ * @param checkPermission 检查权限是否已授予的 lambda,接收 Context 参数,返回 true=已授权
+ * @param requestMethod 权限请求方式 [SettingsIntent] 或 [RuntimePermission]
  */
 data class PermissionDef(
     val nameResId: Int,
     val descriptionResId: Int,
     val requiredApiTextResId: Int,
     val minSdk: Int,
-    val checkPermission: () -> Boolean,
-    val createRequestIntent: (context: Context) -> Intent?
+    val checkPermission: (Context) -> Boolean,
+    val requestMethod: RequestMethod
 ) {
     companion object {
+        // ====================================================================
+        // 特殊权限（需跳转系统设置）
+        // ====================================================================
+
         /**
-         * MANAGE_EXTERNAL_STORAGE 权限定义
+         * MANAGE_EXTERNAL_STORAGE
          *
          * Android 11+ 外置存储全部文件读写权限。
          * 通过 Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION 引导授权。
@@ -43,18 +71,133 @@ data class PermissionDef(
             descriptionResId = R.string.manage_storage_permission_desc,
             requiredApiTextResId = R.string.manage_storage_required_api,
             minSdk = Build.VERSION_CODES.R,
-            checkPermission = {
+            checkPermission = { _ ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     Environment.isExternalStorageManager()
                 } else {
                     false
                 }
             },
-            createRequestIntent = { context ->
+            requestMethod = RequestMethod.SettingsIntent { context ->
                 Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
                     data = Uri.parse("package:${context.packageName}")
                 }
             }
+        )
+
+        // ====================================================================
+        // 运行时权限（通过系统对话框申请）
+        // ====================================================================
+
+        /**
+         * CAMERA
+         *
+         * 相机权限，始终可用的运行时权限。
+         */
+        val CAMERA = PermissionDef(
+            nameResId = R.string.permission_camera,
+            descriptionResId = R.string.permission_camera_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.CAMERA)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.CAMERA)
+        )
+
+        /**
+         * ACCESS_FINE_LOCATION
+         *
+         * 精确定位权限，始终可用的运行时权限。
+         */
+        val ACCESS_FINE_LOCATION = PermissionDef(
+            nameResId = R.string.permission_location,
+            descriptionResId = R.string.permission_location_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        )
+
+        /**
+         * RECORD_AUDIO
+         *
+         * 录音权限，始终可用的运行时权限。
+         */
+        val RECORD_AUDIO = PermissionDef(
+            nameResId = R.string.permission_microphone,
+            descriptionResId = R.string.permission_microphone_desc,
+            requiredApiTextResId = R.string.permission_all_api,
+            minSdk = 1,
+            checkPermission = { ctx ->
+                checkRuntimePermission(ctx, Manifest.permission.RECORD_AUDIO)
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.RECORD_AUDIO)
+        )
+
+        /**
+         * POST_NOTIFICATIONS
+         *
+         * 通知权限，Android 13 (API 33) 引入的运行时权限。
+         */
+        val POST_NOTIFICATIONS = PermissionDef(
+            nameResId = R.string.permission_notification,
+            descriptionResId = R.string.permission_notification_desc,
+            requiredApiTextResId = R.string.permission_required_api_33,
+            minSdk = Build.VERSION_CODES.TIRAMISU,
+            checkPermission = { ctx ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    checkRuntimePermission(ctx, Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    // API 33 以下默认有通知权限
+                    true
+                }
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.POST_NOTIFICATIONS)
+        )
+
+        /**
+         * READ_MEDIA_IMAGES
+         *
+         * 读取媒体图片权限，Android 13 (API 33) 替代 READ_EXTERNAL_STORAGE。
+         */
+        val READ_MEDIA_IMAGES = PermissionDef(
+            nameResId = R.string.permission_read_media_images,
+            descriptionResId = R.string.permission_read_media_images_desc,
+            requiredApiTextResId = R.string.permission_required_api_33,
+            minSdk = Build.VERSION_CODES.TIRAMISU,
+            checkPermission = { ctx ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    checkRuntimePermission(ctx, Manifest.permission.READ_MEDIA_IMAGES)
+                } else {
+                    // API 33 以下使用 READ_EXTERNAL_STORAGE 检查
+                    checkRuntimePermission(ctx, Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.READ_MEDIA_IMAGES)
+        )
+
+        /**
+         * BLUETOOTH_CONNECT
+         *
+         * 蓝牙连接权限，Android 12 (API 31) 引入的运行时权限。
+         */
+        val BLUETOOTH_CONNECT = PermissionDef(
+            nameResId = R.string.permission_bluetooth,
+            descriptionResId = R.string.permission_bluetooth_desc,
+            requiredApiTextResId = R.string.permission_required_api_31,
+            minSdk = Build.VERSION_CODES.S,
+            checkPermission = { ctx ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    checkRuntimePermission(ctx, Manifest.permission.BLUETOOTH_CONNECT)
+                } else {
+                    // API 31 以下无需此运行时权限
+                    true
+                }
+            },
+            requestMethod = RequestMethod.RuntimePermission(Manifest.permission.BLUETOOTH_CONNECT)
         )
 
         /**
@@ -63,7 +206,25 @@ data class PermissionDef(
          * 按预期显示顺序排列。新增权限时只需在此列表中添加定义即可。
          */
         val ALL_PERMISSIONS: List<PermissionDef> = listOf(
-            MANAGE_EXTERNAL_STORAGE
+            MANAGE_EXTERNAL_STORAGE,
+            CAMERA,
+            ACCESS_FINE_LOCATION,
+            RECORD_AUDIO,
+            POST_NOTIFICATIONS,
+            READ_MEDIA_IMAGES,
+            BLUETOOTH_CONNECT
         )
+
+        /**
+         * 通用的运行时权限检查方法
+         *
+         * @param context Context
+         * @param permission Manifest.permission 常量
+         * @return true=已授权
+         */
+        private fun checkRuntimePermission(context: Context, permission: String): Boolean {
+            val result: Int = ContextCompat.checkSelfPermission(context, permission)
+            return result == PackageManager.PERMISSION_GRANTED
+        }
     }
 }

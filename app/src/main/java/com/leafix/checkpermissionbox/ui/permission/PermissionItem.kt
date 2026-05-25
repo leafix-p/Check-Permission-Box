@@ -29,17 +29,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.leafix.checkpermissionbox.model.PermissionDef
+import com.leafix.checkpermissionbox.model.RequestMethod
 
 /**
  * 通用权限条目组件
  *
- * 根据 [PermissionDef] 数据渲染一个权限管理条目,包含:
- * - 权限名称、描述、最低系统版本要求
- * - 权限状态开关(Switch)
- * - 当设备系统版本不满足最低要求时,整行半透明禁用
- * - 通过 ActivityResultLauncher 和 onResume 生命周期实时刷新权限状态
+ * 根据 [PermissionDef] 数据渲染一个权限管理条目,支持两类权限请求方式:
+ * - [RequestMethod.SettingsIntent]: 跳转系统设置页面引导授权
+ * - [RequestMethod.RuntimePermission]: 弹出系统对话框申请运行时权限
  *
- * 此组件完全由数据驱动,新增权限只需定义 [PermissionDef] 实例即可复用。
+ * 当设备系统版本不满足最低要求时,整行半透明禁用。
+ * 权限状态通过 ActivityResultLauncher 和 onResume 生命周期实时刷新。
  *
  * @param permission 权限定义数据
  * @param modifier Modifier
@@ -52,18 +52,29 @@ fun PermissionItem(
     // 判断当前设备是否满足最低 API 要求
     val isSupported = Build.VERSION.SDK_INT >= permission.minSdk
 
-    // 获取当前 context,用于启动 Intent
+    // 获取当前 context,用于检查权限和启动 Intent
     val context = LocalContext.current
 
     // 权限授权状态:true=已授权,false=未授权
-    var isGranted by remember { mutableStateOf(permission.checkPermission()) }
+    // checkPermission 需要 Context 参数
+    var isGranted by remember {
+        mutableStateOf(permission.checkPermission(context))
+    }
 
-    // 注册 ActivityResultLauncher,用于监听从系统设置页面返回的结果
-    val requestLauncher = rememberLauncherForActivityResult(
+    // 注册 ActivityResultLauncher: 跳转系统设置页面
+    val settingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { _ ->
-        // 用户从设置页面返回后,重新检查权限状态
-        isGranted = permission.checkPermission()
+        // 用户从系统设置页面返回后,重新检查权限状态
+        isGranted = permission.checkPermission(context)
+    }
+
+    // 注册 ActivityResultLauncher: 系统运行时权限对话框
+    val runtimeLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        // 用户响应权限对话框后,重新检查权限状态
+        isGranted = permission.checkPermission(context)
     }
 
     // 监听生命周期事件,在 onResume 时重新检查权限状态
@@ -71,7 +82,7 @@ fun PermissionItem(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                isGranted = permission.checkPermission()
+                isGranted = permission.checkPermission(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -102,10 +113,17 @@ fun PermissionItem(
             checked = if (isSupported) isGranted else false,
             onCheckedChange = if (isSupported) { targetChecked ->
                 if (targetChecked && !isGranted) {
-                    // 关闭 -> 打开: 创建并启动授权引导 Intent
-                    val intent: Intent? = permission.createRequestIntent(context)
-                    if (intent != null) {
-                        requestLauncher.launch(intent)
+                    // 关闭 -> 打开: 按权限请求方式启动授权
+                    when (val method = permission.requestMethod) {
+                        is RequestMethod.SettingsIntent -> {
+                            // 跳转系统设置页面引导授权
+                            val intent: Intent = method.createIntent(context)
+                            settingsLauncher.launch(intent)
+                        }
+                        is RequestMethod.RuntimePermission -> {
+                            // 弹出系统运行时权限对话框
+                            runtimeLauncher.launch(method.permissionName)
+                        }
                     }
                 }
             } else null
