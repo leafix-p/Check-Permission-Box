@@ -18,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -35,7 +34,8 @@ import com.leafix.checkpermissionbox.model.rememberLauncher
  * 权限请求方式已通过 [PermissionDef.requestMethod] 解耦，
  * 由 [rememberLauncher] 统一处理 [SettingsIntent] 和 [RuntimePermission] 的差异。
  *
- * 当设备系统版本不满足最低要求时，整行半透明禁用。
+ * 当设备系统版本不满足最低要求时，仅 Switch 开关禁用（不可交互），
+ * 文本信息保持正常显示。
  * 权限状态通过 ActivityResultLauncher 和 onResume 生命周期实时刷新。
  *
  * @param permission 权限定义数据
@@ -84,9 +84,7 @@ fun PermissionItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            // 设备不满足最低 API 要求时,整行半透明显示
-            .alpha(if (isSupported) 1f else 0.4f),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 左侧:权限名称、描述、适用版本提示
