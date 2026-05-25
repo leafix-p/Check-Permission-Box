@@ -27,9 +27,9 @@
     <string name="permission_microphone">麦克风</string>
     <string name="permission_microphone_desc">允许应用录制音频</string>
     <string name="permission_notification">通知</string>
-    <string name="permission_notification_desc">允许应用发送通知</string>
+    <string name="permission_notification_desc">允许应用发送通知（Android 13+ 系统对话框授权）</string>
     <string name="permission_notification_settings">通知设置</string>
-    <string name="permission_notification_settings_desc">跳转系统通知设置页面管理通知</string>
+    <string name="permission_notification_settings_desc">跳转系统通知设置页面管理（兼容所有版本）</string>
     <string name="permission_contacts">通讯录</string>
     <string name="permission_contacts_desc">允许应用读取设备中的联系人</string>
     <string name="permission_calendar">日历</string>
